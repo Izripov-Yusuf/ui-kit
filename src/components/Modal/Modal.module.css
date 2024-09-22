@@ -1,26 +1,41 @@
-.modalOverlay {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
+.overlay {
+  position: fixed;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(0, 0, 0, 0.6);
+  inset: 0px;
+  background-color: rgba(0, 0, 0, 0.5);
+  -webkit-tap-highlight-color: transparent;
+  z-index: -1;
+}
+
+.overlay,
+.container {
   will-change: opacity;
   transition: opacity ease-in 200ms;
 }
 
-.modalOverlay[data-closed] {
+.overlay[data-closed],
+.container[data-closed] {
   opacity: 0;
 }
 
-.modal {
+.container {
   margin: auto;
+  height: 100%;
+  width: 100%;
+  max-width: 600px;
+  outline: 0px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.content {
   padding: 28px 30px;
   width: 100%;
   max-width: 600px;
+  outline: 0px;
   background: #fff;
   border: 1px solid #f2f2f2;
   box-shadow: 0 3px 20px rgba(0, 0, 0, 0.06);

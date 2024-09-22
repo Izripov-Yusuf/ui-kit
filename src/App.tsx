@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button } from '@headlessui/react';
 
 import styles from './App.module.css';
-import Modal from './components/Modal';
+import { Modal } from './components/Modal';
 
 // ## Библиотека компонентов
 

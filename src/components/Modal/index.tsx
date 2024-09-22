@@ -1,7 +1,13 @@
-import { useEffect, useRef } from 'react';
+// - Вложенные модалки не обрабатываются корректно. нужно написать какую-то логику вне реакт, которая будет обрабатывать закрытие модалок по очереди.
+// - Заметка от меня: при активной модалке, если кликнуть на кнопку, модалка моргает
+
+import { useEffect, useRef, memo } from 'react';
+import { createPortal } from 'react-dom';
 import { Transition } from '@headlessui/react';
 
 import styles from './Modal.module.css';
+import { useEvent } from '../../hooks/useEvent';
+import { modalRoot } from '../../constants';
 
 type ModalProps = {
   show: boolean;
@@ -9,28 +15,28 @@ type ModalProps = {
   title?: string;
 } & React.PropsWithChildren;
 
-export default function Modal({
+export const Modal = memo(function Modal({
   show,
   title,
   children,
   onCloseClick,
 }: ModalProps) {
   const modalRef = useRef<HTMLDivElement | null>(null);
+  const onCloseClickCb = useEvent(onCloseClick);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      // TODO: кастование типов, норм ли здесь
       if (
         modalRef.current &&
         !modalRef.current.contains(event.target as Node)
       ) {
-        onCloseClick();
+        onCloseClickCb();
       }
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        onCloseClick();
+        onCloseClickCb();
       }
     };
 
@@ -41,25 +47,27 @@ export default function Modal({
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
+  }, [onCloseClickCb]);
 
-  return (
-    <Transition show={show}>
-      <div
-        className={styles.modalOverlay}
-        onClick={onCloseClick}
-        ref={modalRef}
-      >
-        <div className={styles.modal}>
-          <div className={styles.header}>
-            {title && <div className={styles.title}>{title}</div>}
-            <div className={styles.close} onClick={onCloseClick}>
-              X
+  return createPortal(
+    <>
+      <Transition show={show}>
+        <div className={styles.overlay} onClick={onCloseClick} />
+      </Transition>
+      <Transition show={show}>
+        <div className={styles.container} ref={modalRef}>
+          <div className={styles.content}>
+            <div className={styles.header}>
+              {title && <div className={styles.title}>{title}</div>}
+              <div className={styles.close} onClick={onCloseClick}>
+                X
+              </div>
             </div>
+            {children}
           </div>
-          {children}
         </div>
-      </div>
-    </Transition>
+      </Transition>
+    </>,
+    modalRoot
   );
-}
+});
