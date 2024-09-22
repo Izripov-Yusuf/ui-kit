@@ -1,3 +1,8 @@
+.root {
+  position: fixed;
+  inset: 0;
+}
+
 .overlay {
   position: fixed;
   display: flex;
@@ -6,7 +11,6 @@
   inset: 0px;
   background-color: rgba(0, 0, 0, 0.5);
   -webkit-tap-highlight-color: transparent;
-  z-index: -1;
 }
 
 .overlay,
@@ -22,7 +26,9 @@
 
 .container {
   margin: auto;
-  height: 100%;
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
   width: 100%;
   max-width: 600px;
   outline: 0px;

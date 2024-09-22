@@ -1,13 +1,14 @@
-// - Вложенные модалки не обрабатываются корректно. нужно написать какую-то логику вне реакт, которая будет обрабатывать закрытие модалок по очереди.
-// - Заметка от меня: при активной модалке, если кликнуть на кнопку, модалка моргает
+// - Клик на Escape работает нормально, почему-то не работает клики по крестику и оверлею
 
 import { useEffect, useRef, memo } from 'react';
 import { createPortal } from 'react-dom';
-import { Transition } from '@headlessui/react';
+import { Transition, TransitionChild } from '@headlessui/react';
 
 import styles from './Modal.module.css';
 import { useEvent } from '../../hooks/useEvent';
 import { modalRoot } from '../../constants';
+
+import modalController from './modalController';
 
 type ModalProps = {
   show: boolean;
@@ -25,49 +26,42 @@ export const Modal = memo(function Modal({
   const onCloseClickCb = useEvent(onCloseClick);
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        modalRef.current &&
-        !modalRef.current.contains(event.target as Node)
-      ) {
-        onCloseClickCb();
-      }
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        onCloseClickCb();
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('keydown', handleKeyDown);
+    if (show) {
+      modalController.registerModal(onCloseClickCb);
+    }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleKeyDown);
+      modalController.unregisterModal(onCloseClickCb);
     };
-  }, [onCloseClickCb]);
+  }, [show, onCloseClickCb]);
 
   return createPortal(
-    <>
-      <Transition show={show}>
-        <div className={styles.overlay} onClick={onCloseClick} />
-      </Transition>
-      <Transition show={show}>
-        <div className={styles.container} ref={modalRef}>
-          <div className={styles.content}>
-            <div className={styles.header}>
-              {title && <div className={styles.title}>{title}</div>}
-              <div className={styles.close} onClick={onCloseClick}>
-                X
+    <Transition show={show}>
+      <div className={styles.root}>
+        <TransitionChild>
+          <div
+            className={styles.overlay}
+            onClick={() => modalController.closeTopModal()}
+          />
+        </TransitionChild>
+        <TransitionChild>
+          <div className={styles.container} ref={modalRef}>
+            <div className={styles.content}>
+              <div className={styles.header}>
+                {title && <div className={styles.title}>{title}</div>}
+                <div
+                  className={styles.close}
+                  onClick={() => modalController.closeTopModal()}
+                >
+                  X
+                </div>
               </div>
+              {children}
             </div>
-            {children}
           </div>
-        </div>
-      </Transition>
-    </>,
+        </TransitionChild>
+      </div>
+    </Transition>,
     modalRoot
   );
 });
