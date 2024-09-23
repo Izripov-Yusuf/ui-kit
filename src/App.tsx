@@ -81,50 +81,45 @@ function App() {
         >
           <Button className={styles.button} onClick={() => setShowModal2(true)}>
             Show Modal 2
-            <Modal
-              show={showModal2}
-              title="Title 222"
-              onCloseClick={() => setShowModal2(false)}
-            >
-              <Button
-                className={styles.button}
-                onClick={() => setShowModal3(true)}
-              >
-                Show Modal 3
-                <Modal
-                  show={showModal3}
-                  title="Title 333"
-                  onCloseClick={() => setShowModal3(false)}
-                >
-                  <Button
-                    className={styles.button}
-                    onClick={() => setShowModal4(true)}
-                  >
-                    Show Modal 4
-                    <Modal
-                      show={showModal4}
-                      title="Title 444"
-                      onCloseClick={() => setShowModal4(false)}
-                    >
-                      <Button
-                        className={styles.button}
-                        onClick={() => setShowModal5(true)}
-                      >
-                        Show Modal 5
-                      </Button>
-                      <Modal
-                        show={showModal5}
-                        title="Title 555"
-                        onCloseClick={() => setShowModal5(false)}
-                      >
-                        Modal 5
-                      </Modal>
-                    </Modal>
-                  </Button>
-                </Modal>
-              </Button>
-            </Modal>
           </Button>
+        </Modal>
+
+        <Modal
+          show={showModal2}
+          title="Title 222"
+          onCloseClick={() => setShowModal2(false)}
+        >
+          <Button className={styles.button} onClick={() => setShowModal3(true)}>
+            Show Modal 3
+          </Button>
+        </Modal>
+
+        <Modal
+          show={showModal3}
+          title="Title 333"
+          onCloseClick={() => setShowModal3(false)}
+        >
+          <Button className={styles.button} onClick={() => setShowModal4(true)}>
+            Show Modal 4
+          </Button>
+        </Modal>
+
+        <Modal
+          show={showModal4}
+          title="Title 444"
+          onCloseClick={() => setShowModal4(false)}
+        >
+          <Button className={styles.button} onClick={() => setShowModal5(true)}>
+            Show Modal 5
+          </Button>
+        </Modal>
+
+        <Modal
+          show={showModal5}
+          title="Title 555"
+          onCloseClick={() => setShowModal5(false)}
+        >
+          Modal 5
         </Modal>
       </section>
     </main>

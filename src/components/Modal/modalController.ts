@@ -28,7 +28,6 @@ class ModalController {
 
   public closeTopModal(): void {
     const topCallback = this.modalStack.pop();
-    console.log('this.modalStack', this.modalStack);
     if (topCallback) {
       topCallback();
     }

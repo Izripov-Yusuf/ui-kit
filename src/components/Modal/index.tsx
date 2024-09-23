@@ -1,5 +1,3 @@
-// - Клик на Escape работает нормально, почему-то не работает клики по крестику и оверлею
-
 import { useEffect, useRef, memo } from 'react';
 import { createPortal } from 'react-dom';
 import { Transition, TransitionChild } from '@headlessui/react';
@@ -26,9 +24,11 @@ export const Modal = memo(function Modal({
   const onCloseClickCb = useEvent(onCloseClick);
 
   useEffect(() => {
-    if (show) {
-      modalController.registerModal(onCloseClickCb);
+    if (!show) {
+      return;
     }
+
+    modalController.registerModal(onCloseClickCb);
 
     return () => {
       modalController.unregisterModal(onCloseClickCb);
@@ -39,20 +39,14 @@ export const Modal = memo(function Modal({
     <Transition show={show}>
       <div className={styles.root}>
         <TransitionChild>
-          <div
-            className={styles.overlay}
-            onClick={() => modalController.closeTopModal()}
-          />
+          <div className={styles.overlay} onClick={() => onCloseClickCb()} />
         </TransitionChild>
         <TransitionChild>
           <div className={styles.container} ref={modalRef}>
             <div className={styles.content}>
               <div className={styles.header}>
                 {title && <div className={styles.title}>{title}</div>}
-                <div
-                  className={styles.close}
-                  onClick={() => modalController.closeTopModal()}
-                >
+                <div className={styles.close} onClick={() => onCloseClickCb()}>
                   X
                 </div>
               </div>
