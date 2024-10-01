@@ -3,6 +3,7 @@ import { Button } from '@headlessui/react';
 
 import styles from './App.module.css';
 import { Modal } from './components/Modal';
+import { Dropdown } from './components/Dropdown';
 
 // ## Библиотека компонентов
 
@@ -121,6 +122,18 @@ function App() {
         >
           Modal 5
         </Modal>
+      </section>
+
+      <section className={styles.component}>
+        <Dropdown>
+          <Dropdown.Trigger>
+            <Button className={styles.button}>Menu</Button>
+          </Dropdown.Trigger>
+          <Dropdown.Menu>
+            <Dropdown.Item>Item 1</Dropdown.Item>
+            <Dropdown.Item>Item 2</Dropdown.Item>
+          </Dropdown.Menu>
+        </Dropdown>
       </section>
     </main>
   );
