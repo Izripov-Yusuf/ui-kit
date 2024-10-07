@@ -127,7 +127,12 @@ function App() {
       <section className={styles.component}>
         <Dropdown>
           <Dropdown.Trigger>
-            <Button className={styles.button}>Menu</Button>
+            {/* TODO: С паттерном renderless компонентов чуть изменяется API компонента у нас, это норм? */}
+            {(props) => (
+              <Button className={styles.button} {...props}>
+                Menu
+              </Button>
+            )}
           </Dropdown.Trigger>
           <Dropdown.Menu>
             <Dropdown.Item>Item 1</Dropdown.Item>

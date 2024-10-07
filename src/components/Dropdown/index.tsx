@@ -1,20 +1,41 @@
-import { Transition } from '@headlessui/react';
+// Правки
+// - outside click - нужно обрабатывать ✅
+// - рендерить меню в портале ✅
+// - не рендерить обертку для триггера, делать через клон элемент - https://youtu.be/D7UDfW2MFI4?si=7uwxQhXuahtMlVBi ✅
+// - нет закрытия при клике на айтем
+// - добавить внешний обработчик клика в айтем
+
+// import { Transition } from '@headlessui/react';
 import {
-  memo,
   createContext,
   PropsWithChildren,
   useContext,
   useState,
   useCallback,
   useMemo,
+  useRef,
+  useLayoutEffect,
 } from 'react';
 
 import styles from './Dropdown.module.css';
+import { useClickOutside } from '../../hooks/useClickOutside';
+
+import { modalRoot } from '../../constants';
+import { createPortal } from 'react-dom';
 
 type DropdownProps = {} & PropsWithChildren;
 
+type TriggerChildProps = {
+  onClick: React.MouseEventHandler<HTMLElement>;
+  ref: React.MutableRefObject<HTMLDivElement | null>;
+};
+type TriggerProps = {
+  children: (props: TriggerChildProps) => React.ReactElement;
+};
+
 type DropdownContextType = {
   isOpen: boolean;
+  triggerRef: React.MutableRefObject<HTMLDivElement | null>;
   setToggle: () => void;
 };
 
@@ -33,72 +54,93 @@ function useDropdownContext() {
   return context;
 }
 
-const DropdownRoot = memo(({ children }: DropdownProps) => {
+const DropdownRoot = ({ children }: DropdownProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const setToggle = useCallback(() => setIsOpen((prevState) => !prevState), []);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const triggerRef = useRef<HTMLDivElement | null>(null);
 
   const value = useMemo(
     () => ({
       isOpen,
       setToggle,
+      triggerRef,
     }),
     [isOpen, setToggle]
   );
+
+  useClickOutside(rootRef, setToggle, isOpen);
+
   return (
     <DropdownContext.Provider value={value}>
-      <div className={styles.root}>{children}</div>
+      <div className={styles.root} ref={rootRef}>
+        {children}
+      </div>
     </DropdownContext.Provider>
   );
-});
+};
 
-const Trigger = memo(({ children }: PropsWithChildren) => {
-  const { setToggle } = useDropdownContext();
+const Trigger = ({ children }: TriggerProps) => {
+  const { setToggle, triggerRef } = useDropdownContext();
   return (
-    <div className={styles.trigger} onClick={setToggle}>
-      {children}
-    </div>
+    <>
+      {children({
+        onClick: setToggle,
+        ref: triggerRef,
+      })}
+    </>
   );
-});
+};
 
-const Menu = memo(({ children }: PropsWithChildren) => {
-  const { isOpen } = useDropdownContext();
-  return (
-    <Transition show={isOpen}>
-      <div className={styles.menu}>{children}</div>
-    </Transition>
+const Menu = ({ children }: PropsWithChildren) => {
+  // TODO: сейчас из-за портала меню закрывается даже при клике на айтемы внутри него
+  // TODO: сделать как-нибудь плавность, щас Transition мешает, появляются проблемы с рефом
+  const { isOpen, triggerRef } = useDropdownContext();
+  const [position, setPosition] = useState({ top: 0, left: 0 });
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
+  useLayoutEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const anchor = triggerRef.current;
+    const menu = menuRef.current;
+    if (!anchor || !menu) {
+      return;
+    }
+
+    const anchorRect = anchor.getBoundingClientRect();
+    const menuRect = menu.getBoundingClientRect();
+
+    const TOP_SPACE = 20;
+
+    setPosition({
+      top: anchorRect.top + menuRect.height - TOP_SPACE,
+      left: anchorRect.left + anchorRect.width / 2 - menuRect.width / 2,
+    });
+  }, [isOpen]);
+
+  return createPortal(
+    isOpen && (
+      <div
+        className={styles.menu}
+        style={{ top: position.top, left: position.left }}
+        ref={menuRef}
+      >
+        {children}
+      </div>
+    ),
+    modalRoot
   );
-});
+};
 
-const Item = memo(({ children }: PropsWithChildren) => {
+const Item = ({ children }: PropsWithChildren) => {
   return <div className={styles.item}>{children}</div>;
-});
+};
 
-// TODO: Как лучше и почему так лучше? Вот так
 export const Dropdown = Object.assign(DropdownRoot, {
   Trigger,
   Menu,
   Item,
 });
-
-// TODO: Или вот так? Но тут без memo на Dropdown, т.к. если обернуть Dropdown в memo, то получаем TS ошибки
-// const Dropdown = ({ children }: DropdownProps) => {
-//   return <div className="dropdown">{children}</div>;
-// };
-
-// const Trigger = memo(({ children }: PropsWithChildren) => {
-//   return <div className="dropdown-trigger">{children}</div>;
-// });
-
-// const Menu = memo(({ children }: PropsWithChildren) => {
-//   return <div className="dropdown-menu">{children}</div>;
-// });
-
-// const Item = memo(({ children }: PropsWithChildren) => {
-//   return <div className="dropdown-item">{children}</div>;
-// });
-
-// Dropdown.Trigger = Trigger;
-// Dropdown.Menu = Menu;
-// Dropdown.Item = Item;
-
-// export default Dropdown;

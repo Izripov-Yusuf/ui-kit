@@ -1,11 +1,9 @@
 .root {
-  position: relative;
+  display: inline-block;
 }
 
 .menu {
   position: absolute;
-  top: 35px;
-  left: -22px;
   padding: 12px;
   background-color: color-mix(in srgb, #000 5%, transparent);
   border: 1px solid color-mix(in srgb, #000 5%, transparent);
@@ -16,10 +14,6 @@
 
 .menu[data-closed] {
   opacity: 0;
-}
-
-.trigger {
-  display: inline-block;
 }
 
 .item {
