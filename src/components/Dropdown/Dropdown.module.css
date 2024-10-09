@@ -15,11 +15,3 @@
 .menu[data-closed] {
   opacity: 0;
 }
-
-.item {
-  margin-bottom: 8px;
-  cursor: pointer;
-}
-.item:last-child {
-  margin-bottom: 0;
-}

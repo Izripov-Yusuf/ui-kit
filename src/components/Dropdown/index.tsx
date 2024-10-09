@@ -2,10 +2,10 @@
 // - outside click - нужно обрабатывать ✅
 // - рендерить меню в портале ✅
 // - не рендерить обертку для триггера, делать через клон элемент - https://youtu.be/D7UDfW2MFI4?si=7uwxQhXuahtMlVBi ✅
-// - нет закрытия при клике на айтем
-// - добавить внешний обработчик клика в айтем
+// - нет закрытия при клике на айтем ✅
+// - добавить внешний обработчик клика в айтем ✅
 
-// import { Transition } from '@headlessui/react';
+import { Transition } from '@headlessui/react';
 import {
   createContext,
   PropsWithChildren,
@@ -14,7 +14,6 @@ import {
   useCallback,
   useMemo,
   useRef,
-  useLayoutEffect,
 } from 'react';
 
 import styles from './Dropdown.module.css';
@@ -22,20 +21,27 @@ import { useClickOutside } from '../../hooks/useClickOutside';
 
 import { modalRoot } from '../../constants';
 import { createPortal } from 'react-dom';
+import { useEvent } from '../../hooks/useEvent';
 
 type DropdownProps = {} & PropsWithChildren;
 
-type TriggerChildProps = {
-  onClick: React.MouseEventHandler<HTMLElement>;
-  ref: React.MutableRefObject<HTMLDivElement | null>;
+type RenderlessChildProps = {
+  onClick?: React.MouseEventHandler<HTMLElement>;
+  ref?: React.MutableRefObject<HTMLDivElement | null>;
+  className?: string;
 };
-type TriggerProps = {
-  children: (props: TriggerChildProps) => React.ReactElement;
+type RenderlessComponentProps = {
+  children: (props: RenderlessChildProps) => React.ReactElement;
 };
 
 type DropdownContextType = {
   isOpen: boolean;
+  position: {
+    top: number;
+    left: number;
+  };
   triggerRef: React.MutableRefObject<HTMLDivElement | null>;
+  menuCbRef: (menuElement: HTMLDivElement | null) => any;
   setToggle: () => void;
 };
 
@@ -57,30 +63,61 @@ function useDropdownContext() {
 const DropdownRoot = ({ children }: DropdownProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const setToggle = useCallback(() => setIsOpen((prevState) => !prevState), []);
-  const rootRef = useRef<HTMLDivElement | null>(null);
+
+  const [position, setPosition] = useState({ top: 0, left: 0 });
+
   const triggerRef = useRef<HTMLDivElement | null>(null);
+
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  const menuCbRef = useEvent((menuElement: HTMLDivElement | null) => {
+    if (!isOpen) {
+      return;
+    }
+
+    const anchor = triggerRef.current;
+    const menu = menuElement;
+    if (!anchor || !menu) {
+      return;
+    }
+    menuRef.current = menu;
+
+    const anchorRect = anchor.getBoundingClientRect();
+    const menuRect = menu.getBoundingClientRect();
+
+    const TOP_SPACE = 20;
+
+    const newPosition = {
+      top: anchorRect.top + menuRect.height - TOP_SPACE,
+      left: anchorRect.left + anchorRect.width / 2 - menuRect.width / 2,
+    };
+
+    // TODO: насколько норм? И почему это решает проблему
+    requestAnimationFrame(() => {
+      setPosition(newPosition);
+    });
+  });
 
   const value = useMemo(
     () => ({
       isOpen,
+      position,
       setToggle,
       triggerRef,
+      menuCbRef,
     }),
-    [isOpen, setToggle]
+    [isOpen, position, setToggle]
   );
 
-  useClickOutside(rootRef, setToggle, isOpen);
+  useClickOutside([menuRef, triggerRef], setToggle, isOpen);
 
   return (
     <DropdownContext.Provider value={value}>
-      <div className={styles.root} ref={rootRef}>
-        {children}
-      </div>
+      <div className={styles.root}>{children}</div>
     </DropdownContext.Provider>
   );
 };
 
-const Trigger = ({ children }: TriggerProps) => {
+const Trigger = ({ children }: RenderlessComponentProps) => {
   const { setToggle, triggerRef } = useDropdownContext();
   return (
     <>
@@ -93,50 +130,33 @@ const Trigger = ({ children }: TriggerProps) => {
 };
 
 const Menu = ({ children }: PropsWithChildren) => {
-  // TODO: сейчас из-за портала меню закрывается даже при клике на айтемы внутри него
-  // TODO: сделать как-нибудь плавность, щас Transition мешает, появляются проблемы с рефом
-  const { isOpen, triggerRef } = useDropdownContext();
-  const [position, setPosition] = useState({ top: 0, left: 0 });
-  const menuRef = useRef<HTMLDivElement | null>(null);
-
-  useLayoutEffect(() => {
-    if (!isOpen) {
-      return;
-    }
-
-    const anchor = triggerRef.current;
-    const menu = menuRef.current;
-    if (!anchor || !menu) {
-      return;
-    }
-
-    const anchorRect = anchor.getBoundingClientRect();
-    const menuRect = menu.getBoundingClientRect();
-
-    const TOP_SPACE = 20;
-
-    setPosition({
-      top: anchorRect.top + menuRect.height - TOP_SPACE,
-      left: anchorRect.left + anchorRect.width / 2 - menuRect.width / 2,
-    });
-  }, [isOpen]);
+  const { isOpen, position, menuCbRef } = useDropdownContext();
 
   return createPortal(
-    isOpen && (
+    <Transition show={isOpen}>
       <div
         className={styles.menu}
         style={{ top: position.top, left: position.left }}
-        ref={menuRef}
+        ref={menuCbRef}
       >
         {children}
       </div>
-    ),
+    </Transition>,
     modalRoot
   );
 };
 
-const Item = ({ children }: PropsWithChildren) => {
-  return <div className={styles.item}>{children}</div>;
+const Item = ({ children }: RenderlessComponentProps) => {
+  // TODO: Норм ли здесь использовать renderless подход?
+  const { setToggle } = useDropdownContext();
+  return (
+    <>
+      {children({
+        onClick: setToggle,
+        className: styles.item,
+      })}
+    </>
+  );
 };
 
 export const Dropdown = Object.assign(DropdownRoot, {

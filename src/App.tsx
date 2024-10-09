@@ -135,8 +135,24 @@ function App() {
             )}
           </Dropdown.Trigger>
           <Dropdown.Menu>
-            <Dropdown.Item>Item 1</Dropdown.Item>
-            <Dropdown.Item>Item 2</Dropdown.Item>
+            <Dropdown.Item>
+              {/* TODO: С паттерном renderless компонентов чуть изменяется API компонента у нас, это норм? */}
+              {(props) => (
+                <div
+                  className={styles.item}
+                  onClick={(event) => {
+                    console.log('event', event);
+                    props.onClick?.(event);
+                  }}
+                >
+                  Item 1
+                </div>
+              )}
+            </Dropdown.Item>
+            <Dropdown.Item>
+              {/* TODO: С паттерном renderless компонентов чуть изменяется API компонента у нас, это норм? */}
+              {(props) => <div {...props}>Item 2</div>}
+            </Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown>
       </section>
