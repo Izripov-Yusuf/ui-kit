@@ -127,7 +127,6 @@ function App() {
       <section className={styles.component}>
         <Dropdown>
           <Dropdown.Trigger>
-            {/* TODO: С паттерном renderless компонентов чуть изменяется API компонента у нас, это норм? */}
             {(props) => (
               <Button className={styles.button} {...props}>
                 Menu
@@ -136,7 +135,6 @@ function App() {
           </Dropdown.Trigger>
           <Dropdown.Menu>
             <Dropdown.Item>
-              {/* TODO: С паттерном renderless компонентов чуть изменяется API компонента у нас, это норм? */}
               {(props) => (
                 <div
                   className={styles.item}
@@ -150,7 +148,6 @@ function App() {
               )}
             </Dropdown.Item>
             <Dropdown.Item>
-              {/* TODO: С паттерном renderless компонентов чуть изменяется API компонента у нас, это норм? */}
               {(props) => <div {...props}>Item 2</div>}
             </Dropdown.Item>
           </Dropdown.Menu>

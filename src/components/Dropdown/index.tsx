@@ -1,10 +1,3 @@
-// Правки
-// - outside click - нужно обрабатывать ✅
-// - рендерить меню в портале ✅
-// - не рендерить обертку для триггера, делать через клон элемент - https://youtu.be/D7UDfW2MFI4?si=7uwxQhXuahtMlVBi ✅
-// - нет закрытия при клике на айтем ✅
-// - добавить внешний обработчик клика в айтем ✅
-
 import { Transition } from '@headlessui/react';
 import {
   createContext,
@@ -41,7 +34,8 @@ type DropdownContextType = {
     left: number;
   };
   triggerRef: React.MutableRefObject<HTMLDivElement | null>;
-  menuCbRef: (menuElement: HTMLDivElement | null) => any;
+  menuRef: React.MutableRefObject<HTMLDivElement | null>;
+  beforeEnterCb: () => any;
   setToggle: () => void;
 };
 
@@ -69,13 +63,13 @@ const DropdownRoot = ({ children }: DropdownProps) => {
   const triggerRef = useRef<HTMLDivElement | null>(null);
 
   const menuRef = useRef<HTMLDivElement | null>(null);
-  const menuCbRef = useEvent((menuElement: HTMLDivElement | null) => {
+  const beforeEnterCb = useEvent(() => {
     if (!isOpen) {
       return;
     }
 
     const anchor = triggerRef.current;
-    const menu = menuElement;
+    const menu = menuRef.current;
     if (!anchor || !menu) {
       return;
     }
@@ -91,10 +85,7 @@ const DropdownRoot = ({ children }: DropdownProps) => {
       left: anchorRect.left + anchorRect.width / 2 - menuRect.width / 2,
     };
 
-    // TODO: насколько норм? И почему это решает проблему
-    requestAnimationFrame(() => {
-      setPosition(newPosition);
-    });
+    setPosition(newPosition);
   });
 
   const value = useMemo(
@@ -103,7 +94,8 @@ const DropdownRoot = ({ children }: DropdownProps) => {
       position,
       setToggle,
       triggerRef,
-      menuCbRef,
+      menuRef,
+      beforeEnterCb,
     }),
     [isOpen, position, setToggle]
   );
@@ -130,14 +122,14 @@ const Trigger = ({ children }: RenderlessComponentProps) => {
 };
 
 const Menu = ({ children }: PropsWithChildren) => {
-  const { isOpen, position, menuCbRef } = useDropdownContext();
+  const { isOpen, position, menuRef, beforeEnterCb } = useDropdownContext();
 
   return createPortal(
-    <Transition show={isOpen}>
+    <Transition show={isOpen} beforeEnter={beforeEnterCb}>
       <div
         className={styles.menu}
         style={{ top: position.top, left: position.left }}
-        ref={menuCbRef}
+        ref={menuRef}
       >
         {children}
       </div>
@@ -147,7 +139,6 @@ const Menu = ({ children }: PropsWithChildren) => {
 };
 
 const Item = ({ children }: RenderlessComponentProps) => {
-  // TODO: Норм ли здесь использовать renderless подход?
   const { setToggle } = useDropdownContext();
   return (
     <>
